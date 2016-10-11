@@ -1,0 +1,366 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="zh-tw">
+	<head>
+	<meta name="Generator" content="EditPlus" />
+	<meta name="Author" content="TEST" />
+	<meta name="Keywords" content="" />
+	<meta name="Description" content="" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Content-Script-Type" content="text/javascript" />
+	<meta http-equiv="Content-Style-Type" content="text/css" />
+	
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Park Map Test</title>
+	<script src="http://maps.google.com/maps/api/js?sensor=false" 
+          type="text/javascript"></script>
+    <!-- Bootstrap -->
+    <link href="css/vendor/bootstrap.min.css" type="text/css" rel="stylesheet">
+	<link href="css/vendor/font-awesome.min.css" type="text/css" rel="stylesheet">
+	<link href="css/jquery.bdt.css" type="text/css" rel="stylesheet">
+	
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<title>Park Map Test</title>
+	<style type="text/css">
+		ul, li {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+		.abgne_tab {
+			clear: center;
+			width: 400px;
+			margin: 10px 0;
+		}
+		ul.tabs {
+			width: 100%;
+			height: 32px;
+			border-bottom: 1px solid #999;
+			border-left: 1px solid #999;
+		}
+		ul.tabs li {
+			float: left;
+			height: 31px;
+			line-height: 31px;
+			overflow: hidden;
+			position: relative;
+			margin-bottom: -1px;	/* 讓 li 往下移來遮住 ul 的部份 border-bottom */
+			border: 1px solid #999;
+			border-left: none;
+			background: #e1e1e1;
+		}
+		ul.tabs li a {
+			display: block;
+			padding: 0 20px;
+			color: #000;
+			border: 1px solid #fff;
+			text-decoration: none;
+		}
+		ul.tabs li a:hover {
+			background: #ccc;
+		}
+		ul.tabs li.active  {
+			background: #fff;
+			border-bottom: 1px solid #fff;
+		}
+		ul.tabs li.active a:hover {
+			background: #fff;
+		}
+		div.tab_container {
+			clear: center;
+			width: 1902px;
+			border: 1px solid #999;
+			border-top: none;
+			background: #fff;
+		}
+		div.tab_container .tab_content {
+			padding: 20px;
+		}
+		div.tab_container .tab_content h2 {
+			margin: 0 0 20px;
+		}
+	</style>
+	<script type="text/javascript">
+		$(function(){
+			// 預設顯示第一個 Tab
+			var _showTab = 0;
+			var $defaultLi = $('ul.tabs li').eq(_showTab).addClass('active');
+			$($defaultLi.find('a').attr('href')).siblings().hide();
+			
+			// 當 li 頁籤被點擊時...
+			// 若要改成滑鼠移到 li 頁籤就切換時, 把 click 改成 mouseover
+			$('ul.tabs li').click(function() {
+				// 找出 li 中的超連結 href(#id)
+				var $this = $(this),
+					_clickTab = $this.find('a').attr('href');
+				// 把目前點擊到的 li 頁籤加上 .active
+				// 並把兄弟元素中有 .active 的都移除 class
+				$this.addClass('active').siblings('.active').removeClass('active');
+				// 淡入相對應的內容並隱藏兄弟元素
+				$(_clickTab).stop(false, true).fadeIn().siblings().hide();
+
+				return false;
+			}).find('a').focus(function(){
+				this.blur();
+			});
+		});
+	</script>
+	</head>
+
+	<body>
+		<div id="map" style="width: 1900px; height: 400px;"></div>
+		<div class="abgne_tab">
+			<ul class="tabs">
+				<li><a href="#tab1">桃園停車場</a></li>
+				<li><a href="#tab2">公車資訊</a></li>
+			</ul>
+
+			<div class="tab_container">
+				<div id="tab1" class="tab_content">
+					
+						<div class="container">
+							<h1>停車場資訊</h1>
+							<p><br/><br/></p>
+								<table id="mydatatable1" class="table table-bordered table-striped">
+									<thead>
+									<tr>
+										<th>ID</th>
+										<th>地區</th>
+										<th>停車場</th>
+										<th>總停車位</th>
+										<th>剩餘停車位</th>
+										<th>停車場說明</th>
+										<th>停車場資訊</th>
+										<th>地址</th>
+										<th>wgsX</th>
+										<th>wgsY</th>
+										<th>停車場ID</th>
+									</tr>
+									</thead>
+									<tfoot>
+										<tr>
+											<th>ID</th>
+											<th>areaName</th>
+											<th>parkName</th>
+											<th>totalSpace</th>
+											<th>surplusSpace</th>
+											<th>payGuide</th>
+											<th>introduction</th>
+											<th>address</th>
+											<th>wgsX</th>
+											<th>wgsY</th>
+											<th>parkId</th>
+										</tr>
+									</tfoot>			
+								</table>
+						</div>	
+				
+				</div>
+				
+				<script type="text/javascript">
+			var locations = [
+			  ['府前地下停車場',	     24.9934, 121.3011, 1],
+			  ['新民立體停車場',	     24.9926, 121.3093, 2],
+			  ['西門地下停車場',	     24.9934, 121.3046, 3],
+			  ['新埔停車場',		        25.0182, 121.3, 4],
+			  ['藝文園區地下停車場',    25.0139,  121.3012, 5],
+			  ['朝陽公園停車場',         24.998,  121.3122, 6],
+			  ['三民公園停車場',        25.0017,  121.3179, 7],
+			  ['陽明公園停車場',        24.9824,  121.3091, 8],
+			  ['延平路停車場',         24.9558,   121.2233, 9],
+			  ['廈門街平面停車場',     24.9947,  121.2988, 10],
+			  ['東門停車場'	,	       24.9932,  121.3141, 11],
+			  ['桃園新站停車場',       24.9877,  121.3142, 12],
+			  ['大檜溪公園地下停車場', 25.0138,  121.3167, 13],
+			  ['建國公園停車場',       24.9861,  121.3155, 14],
+			  ['廣停一停車場',         24.9647,  121.2248, 15],
+			  ['銀河廣場停車場',		24.9619,  121.224, 16],
+			  ['中央停車場',		   24.9563,  121.2264, 17],
+			  ['中北健行平面停車場',   24.9527,  121.2264, 18],
+			  ['中原國小地下停車場',	24.956,  121.2392, 19],
+			  ['內壢停車場',            24.972,  121.2553, 20],
+			  ['自強停車場',             24.968,  121.259, 21],
+			  ['光明公園停車場',       24.9634,  121.2169, 22],
+			  ['興國公有市場立體停車場',24.9619, 121.2196, 23],
+			  ['坤慶公園地下停車場',    24.962,  121.2295, 24],
+			  ['南園停車場',           24.9715,  121.2296, 25],
+			  ['公二停車場',            24.9629,  121.297, 26],
+			  ['忠孝黃昏市場停車場',    24.9826,  121.253, 27],
+			  ['復興停車場',            24.9751,  121.251, 28],
+			  ['忠孝停車場',            24.9767,  121.2542,29],
+			  ['復華停車場',           24.9747,  121.2482, 30],
+			  ['新明國小地下停車場',    24.9588,  121.216, 31],
+			  ['大湳地下停車場',        24.959,  121.2985, 32],
+			  ['大忠地下停車場',       24.9585,  121.3008, 33],
+			  ['廣北停車場',           24.9567,  121.2086, 34],
+			  ['廣南停車場',            24.9447,  121.209, 35],
+			  ['橋頭停車場',            24.885,  121.2805, 36],
+			  ['大溪遊客中心停車場',   24.8521,  121.2849, 37],
+			  ['慈湖停車場',           24.8403,  121.2933, 38],
+			  ['大模停車場',           24.9096,  121.1444, 39],
+			  ['瑞坪停車場',           24.8955,  121.1747, 40],
+			  ['埔心公園停車場',       24.9123,  121.1848, 41],
+			  ['四維停車場',           24.9135,  121.1801, 42],
+			  ['瑞溪停車場',           24.9072,  121.1674, 43],
+			  ['三元停車場',           24.9097,  121.1702, 44],
+			  ['瑞塘停車場',           24.9083,  121.1790, 45],
+			  ['新成立體停車場',       24.9117,  121.1467, 46],
+			  ['自立停車場',           24.9112,  121.1523, 47],
+			  ['金山停車場',            24.9106,  121.1613,48],
+			  ['梅高停車場',           24.9151,  121.1457, 49],
+			  ['永福停車場',            24.899,  121.1498, 50],
+			  ['公十二停車場',         25.0626,  121.3673, 51],
+			  ['停十八停車場',         25.0612,  121.3636, 52],
+			  ['中山街停車場',         24.9921,  121.3373, 53],
+			  ['公一地下停車場',       25.0502,  121.2932, 54],
+			  ['停一立體停車場',       24.9726,  121.1059, 55],
+			  ['第一公有零售市場停車場',24.9733,  121.1043, 56],
+			  ['第一公有停車場',       24.8634,  121.2155, 57]
+			  
+			];
+
+			var map = new google.maps.Map(document.getElementById('map'), {
+			  zoom: 12,
+			  center: new google.maps.LatLng(24.993387,121.308673),
+			  mapTypeId: google.maps.MapTypeId.ROADMAP
+			});
+
+			var infowindow = new google.maps.InfoWindow();
+
+			var marker, i;
+
+			for (i = 0; i < locations.length; i++) {  
+			  marker = new google.maps.Marker({
+				position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+				map: map
+			  });
+
+			  google.maps.event.addListener(marker, 'click', (function(marker, i) {
+				return function() {
+				  infowindow.setContent(locations[i][0]);
+				  infowindow.open(map, marker);
+				}
+			  })(marker, i));
+			}
+	  </script>
+					
+				<div id="tab2" class="tab_content">
+					<div class="container">
+							<h1>桃園公車資訊</h1>
+							<p><br/><br/></p>
+								<table id="mydatatable2" class="table table-bordered table-striped">
+									<thead>
+									<tr>
+										<th>ID</th>
+										<th>地區</th>
+										<th>停車場</th>
+										<th>總停車位</th>
+										<th>剩餘停車位</th>
+										<th>停車場說明</th>
+										<th>停車場資訊</th>
+										<th>地址</th>
+										<th>wgsX</th>
+										<th>wgsY</th>
+										<th>停車場ID</th>
+									</tr>
+									</thead>
+									<tfoot>
+										<tr>
+											<th>ID</th>
+											<th>areaName</th>
+											<th>parkName</th>
+											<th>totalSpace</th>
+											<th>surplusSpace</th>
+											<th>payGuide</th>
+											<th>introduction</th>
+											<th>address</th>
+											<th>wgsX</th>
+											<th>wgsY</th>
+											<th>parkId</th>
+										</tr>
+									</tfoot>			
+								</table>
+						</div>
+				</div>
+			</div>
+		</div>
+		
+		<script src="http://code.jquery.com/jquery-2.1.1.min.js" type="text/javascript"></script>
+	<script src="js/vendor/bootstrap.min.js" type="text/javascript"></script>
+	<script src="js/jquery.sortelements.js" type="text/javascript"></script>
+	<script src="js/jquery.bdt.js" type="text/javascript"></script>
+	<script>
+		$(document). ready( function () {
+			$('#mydatatable2').bdt();
+		});
+		
+	</script>
+	<script>
+		$.getJSON("data.json",function(data){
+			var items = [];
+			$.each(data, function(key, val){
+				items.push("<tr>");
+				items.push("<td id=''"+key+"''>"+val.areaId+"</td>");
+				items.push("<td id=''"+key+"''>"+val.areaName+"</td>");
+				items.push("<td id=''"+key+"''>"+val.parkName+"</td>");
+				items.push("<td id=''"+key+"''>"+val.totalSpace+"</td>");
+				items.push("<td id=''"+key+"''>"+val.surplusSpace+"</td>");
+				items.push("<td id=''"+key+"''>"+val.payGuide+"</td>");
+				items.push("<td id=''"+key+"''>"+val.introduction+"</td>");
+				items.push("<td id=''"+key+"''>"+val.address+"</td>");
+				items.push("<td id=''"+key+"''>"+val.wgsX+"</td>");
+				items.push("<td id=''"+key+"''>"+val.wgsY+"</td>");
+				items.push("<td id=''"+key+"''>"+val.parkId+"</td>");
+				items.push("</tr>");
+			});
+			$("<tbody/>", {html: items.join("")}).appendTo("table#mydatatable1");
+		});
+		$.getJSON("data2.json",function(data){
+			var items = [];
+			$.each(data, function(key, val){
+				items.push("<tr>");
+				items.push("<td id=''"+key+"''>"+val.ID+"</td>");
+				items.push("<td id=''"+key+"''>"+val.ProviderId+"</td>");
+				items.push("<td id=''"+key+"''>"+val.nameZh+"</td>");
+				items.push("<td id=''"+key+"''>"+val.ddesc+"</td>");
+				items.push("<td id=''"+key+"''>"+val.departureZh+"</td>");
+				items.push("<td id=''"+key+"''>"+val.destinationZh+"</td>");
+				items.push("<td id=''"+key+"''>"+val.gxcode+"</td>");
+				items.push("<td id=''"+key+"''>"+val.RouteType+"</td>");
+				items.push("<td id=''"+key+"''>"+val.MasterRouteName+"</td>");
+				items.push("<td id=''"+key+"''>"+val.MasterRouteNo+"</td>");
+				items.push("<td id=''"+key+"''>"+val.MasterRouteDesc+"</td>");
+				items.push("</tr>");
+			});
+			$("<tbody/>", {html: items.join("")}).appendTo("table#mydatatable2");
+		});
+		
+		
+	</script>
+	<script>
+		var infoWindow = new google.maps.InfoWindow({map: map});
+
+        // Try HTML5 geolocation.
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+
+            infoWindow.setPosition(pos);
+            infoWindow.setContent('您目前的位置');
+            map.setCenter(pos);
+          }, function() {
+            handleLocationError(true, infoWindow, map.getCenter());
+          });
+        } else {
+          // Browser doesn't support Geolocation
+          handleLocationError(false, infoWindow, map.getCenter());
+        }
+	</script>
+		
+	</body>
+</html>
